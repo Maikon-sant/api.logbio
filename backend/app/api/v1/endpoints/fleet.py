@@ -2,7 +2,7 @@
 Endpoints relacionados à frota.
 """
 from fastapi import APIRouter, HTTPException
-from app.schemas.schemas import FleetOverview
+from app.schemas.fleet import FleetOverview
 from app.services.fleet_service import get_fleet_overview
 
 router = APIRouter()

@@ -2,7 +2,7 @@
 Endpoints relacionados a previsões e insights.
 """
 from fastapi import APIRouter, HTTPException
-from app.schemas.schemas import PredictionParams, PredictionResult
+from app.schemas.prediction import PredictionParams, PredictionResult
 from app.services.prediction_service import generate_prediction as generate_prediction_service
 
 router = APIRouter()

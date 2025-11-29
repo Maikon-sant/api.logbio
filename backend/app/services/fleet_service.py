@@ -3,7 +3,8 @@ Serviço para lógica de negócio relacionada à frota.
 """
 from datetime import datetime, timedelta
 from typing import List
-from app.schemas.schemas import FleetOverview, KPIData, TimeSeriesPoint
+from app.schemas.fleet import FleetOverview, KPIData
+from app.schemas.common import TimeSeriesPoint
 
 
 def get_fleet_overview() -> FleetOverview:

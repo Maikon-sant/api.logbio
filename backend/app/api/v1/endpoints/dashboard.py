@@ -3,7 +3,7 @@ Endpoints relacionados ao dashboard de analytics.
 """
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
-from app.schemas.schemas import DashboardMetrics, CriticalShip
+from app.schemas.dashboard import DashboardMetrics, CriticalShip
 from app.services.calculations import aggregate_fleet_metrics
 from app.services.data_service import get_recent_logbooks
 
