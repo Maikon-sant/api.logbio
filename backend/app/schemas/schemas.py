@@ -47,3 +47,21 @@ class PredictionResult(BaseModel):
     maintenanceDate: str  # ISO 8601 YYYY-MM-DD
     chartData: List[TimeSeriesPoint]
 
+
+class CriticalShip(BaseModel):
+    """Schema para navio com risco crítico."""
+    id: int
+    name: str
+    risk: int
+    level: str
+
+
+class DashboardMetrics(BaseModel):
+    """Schema para métricas agregadas do dashboard."""
+    fleet_average_risk: int
+    critical_ships: List[CriticalShip]
+    total_extra_fuel_tons: float
+    total_savings_money: float
+    total_ships: int
+    risk_level: str
+

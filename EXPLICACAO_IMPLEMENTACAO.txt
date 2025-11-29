@@ -1,0 +1,305 @@
+================================================================================
+                    EXPLICAÇÃO DA IMPLEMENTAÇÃO - DEV B
+              Camada de Inteligência do Backend (FastAPI)
+================================================================================
+
+DATA: 2024
+RESPONSÁVEL: Dev B - Time de Desenvolvimento LogBio486
+OBJETIVO: Criar camada de inteligência com heurísticas que podem ser 
+         substituídas por modelos de IA no futuro
+
+================================================================================
+1. VISÃO GERAL DO QUE FOI IMPLEMENTADO
+================================================================================
+
+Foi criada uma camada completa de inteligência para análise e métricas da 
+frota de navios, utilizando heurísticas simples baseadas em regras de negócio.
+Esta camada permite:
+
+- Calcular risco de bioincrustação de navios
+- Analisar ROI (Retorno sobre Investimento) de limpezas
+- Agregar métricas consolidadas da frota
+- Identificar navios críticos que precisam de atenção
+- Estimar economia potencial com manutenção preventiva
+
+================================================================================
+2. ARQUIVOS CRIADOS
+================================================================================
+
+2.1. backend/app/services/calculations.py
+-----------------------------------------
+Este arquivo contém as funções principais de cálculo:
+
+A) calculate_fouling_risk(idle_days, water_temp, salinity)
+   - Calcula o risco de bioincrustação (0-100)
+   - Considera:
+     * Dias que o navio ficou parado (cada dia = +5 pontos)
+     * Temperatura da água (temp > 25°C = +15, temp > 20°C = +5)
+     * Salinidade da água (salinidade > 35 = +5)
+   - Categoriza o risco: baixo (<30), moderado (30-69), crítico (≥70)
+   - Retorna: {"risk": int, "level": str}
+
+B) calculate_cleaning_roi(avg_fuel_consumption, optimized_consumption, 
+                          fuel_price_per_ton, days)
+   - Calcula quanto dinheiro pode ser economizado com uma limpeza
+   - Compara consumo atual vs consumo otimizado
+   - Multiplica pela diferença, período e preço do combustível
+   - Retorna: {"extra_fuel_tons": float, "savings_money": float}
+
+C) aggregate_fleet_metrics(logbooks, fuel_price)
+   - Processa múltiplos navios e agrega os dados
+   - Para cada navio:
+     * Calcula risco usando calculate_fouling_risk()
+     * Identifica navios críticos (risco ≥ 70)
+     * Calcula desperdício de combustível usando calculate_cleaning_roi()
+   - Calcula média de risco da frota
+   - Soma todo o desperdício e economia potencial
+   - Retorna JSON consolidado com todas as métricas
+
+2.2. backend/app/services/data_service.py
+------------------------------------------
+Este arquivo simula a busca de dados do banco de dados:
+
+A) get_recent_logbooks(days=30)
+   - Retorna lista de logbooks mockados (simulando dados reais)
+   - Cada logbook contém:
+     * ship_id: ID do navio
+     * ship_name: Nome do navio
+     * idle_days: Dias parado
+     * water_temp: Temperatura da água
+     * salinity: Salinidade
+     * avg_fuel_consumption: Consumo médio atual
+     * optimized_consumption: Consumo otimizado esperado
+     * last_maintenance_date: Data da última manutenção
+
+   NOTA: Em produção, esta função faria uma consulta SQL ao banco de dados
+         real, buscando logbooks dos últimos N dias.
+
+2.3. backend/app/api/v1/endpoints/dashboard.py
+-----------------------------------------------
+Endpoint REST para expor as métricas:
+
+A) GET /api/v1/dashboard
+   - Parâmetros opcionais:
+     * days: Número de dias para analisar (padrão: 30)
+     * fuel_price: Preço do combustível por tonelada (padrão: 3500.0)
+   
+   - Fluxo interno:
+     1. Busca logbooks recentes via get_recent_logbooks()
+     2. Processa dados via aggregate_fleet_metrics()
+     3. Retorna JSON estruturado com todas as métricas
+   
+   - Validações:
+     * days deve estar entre 1 e 365
+     * fuel_price deve ser maior ou igual a 0
+     * Tratamento de erros com mensagens descritivas
+
+================================================================================
+3. ARQUIVOS MODIFICADOS
+================================================================================
+
+3.1. backend/app/schemas/schemas.py
+------------------------------------
+Adicionados dois novos schemas Pydantic para validação:
+
+A) CriticalShip
+   - Define estrutura de um navio crítico
+   - Campos: id (int), name (str), risk (int), level (str)
+
+B) DashboardMetrics
+   - Define estrutura completa da resposta do dashboard
+   - Campos:
+     * fleet_average_risk: Risco médio da frota
+     * critical_ships: Lista de navios críticos
+     * total_extra_fuel_tons: Total de combustível desperdiçado
+     * total_savings_money: Economia potencial em reais
+     * total_ships: Total de navios analisados
+     * risk_level: Nível geral ("baixo", "moderado", "crítico")
+
+3.2. backend/app/api/v1/api.py
+-------------------------------
+Registrada a nova rota do dashboard no roteador principal:
+   - api_router.include_router(dashboard.router, prefix="/dashboard", 
+                               tags=["dashboard"])
+
+================================================================================
+4. COMO FUNCIONA - FLUXO COMPLETO
+================================================================================
+
+PASSO 1: Frontend faz requisição
+   GET http://localhost:8000/api/v1/dashboard?days=30&fuel_price=3500
+
+PASSO 2: Endpoint recebe a requisição (dashboard.py)
+   - Valida parâmetros
+   - Chama get_recent_logbooks(days=30) para buscar dados
+
+PASSO 3: Busca de dados (data_service.py)
+   - Retorna lista de logbooks mockados
+   - (Em produção: consultaria banco de dados SQL)
+
+PASSO 4: Processamento (calculations.py)
+   - Para cada navio no logbook:
+     a) Calcula risco: calculate_fouling_risk()
+     b) Se risco ≥ 70: adiciona à lista de críticos
+     c) Calcula ROI: calculate_cleaning_roi()
+     d) Acumula desperdício e economia
+   - Calcula média de riscos
+   - Categoriza nível geral da frota
+
+PASSO 5: Retorno
+   - Valida dados com Pydantic (DashboardMetrics schema)
+   - Retorna JSON estruturado para o frontend
+
+================================================================================
+5. EXEMPLO DE RESPOSTA DO ENDPOINT
+================================================================================
+
+GET /api/v1/dashboard
+
+RESPOSTA JSON:
+{
+  "fleet_average_risk": 62,
+  "critical_ships": [
+    {
+      "id": 1,
+      "name": "Lobov 486",
+      "risk": 92,
+      "level": "crítico"
+    },
+    {
+      "id": 3,
+      "name": "Ocean Voyager",
+      "risk": 85,
+      "level": "crítico"
+    },
+    {
+      "id": 7,
+      "name": "Cargo Master",
+      "risk": 78,
+      "level": "crítico"
+    }
+  ],
+  "total_extra_fuel_tons": 456.2,
+  "total_savings_money": 1596700.0,
+  "total_ships": 8,
+  "risk_level": "moderado"
+}
+
+INTERPRETAÇÃO:
+- A frota tem risco médio de 62% (moderado)
+- 3 navios estão em situação crítica
+- Estão desperdiçando 456.2 toneladas de combustível
+- Poderiam economizar R$ 1.596.700 com limpezas preventivas
+
+================================================================================
+6. DETALHES TÉCNICOS DAS HEURÍSTICAS
+================================================================================
+
+6.1. Cálculo de Risco de Bioincrustação
+----------------------------------------
+FÓRMULA:
+   risk = 20 (base)
+   + (idle_days × 5)  [cada dia parado aumenta risco]
+   + 15 se water_temp > 25°C
+   + 5 se 20°C < water_temp ≤ 25°C
+   + 5 se salinity > 35
+   risk = max(0, min(100, risk))  [garante entre 0-100]
+
+POR QUÊ ESSAS REGRAS?
+- Navios parados: Acúmulo de organismos sem movimento da água
+- Temperatura alta: Acelera metabolismo de organismos marinhos
+- Salinidade: Diferentes espécies preferem diferentes salinidades
+
+6.2. Cálculo de ROI de Limpeza
+--------------------------------
+FÓRMULA:
+   extra_per_day = avg_consumption - optimized_consumption
+   extra_tons = extra_per_day × days
+   savings = extra_tons × fuel_price_per_ton
+
+POR QUÊ?
+- Bioincrustação aumenta arrasto hidrodinâmico
+- Maior arrasto = mais combustível necessário
+- Limpeza reduz arrasto = reduz consumo
+
+================================================================================
+7. ESTRUTURA DE DADOS
+================================================================================
+
+7.1. Logbook (Entrada)
+-----------------------
+{
+  "ship_id": int,
+  "ship_name": str,
+  "idle_days": float,              # Dias que navio ficou parado
+  "water_temp": float,              # Temperatura da água em °C
+  "salinity": float,                # Salinidade em ppt (partes por mil)
+  "avg_fuel_consumption": float,    # Consumo médio em ton/dia
+  "optimized_consumption": float,   # Consumo ideal em ton/dia
+  "last_maintenance_date": str      # Data ISO: YYYY-MM-DD
+}
+
+7.2. Dashboard Metrics (Saída)
+--------------------------------
+{
+  "fleet_average_risk": int,        # 0-100
+  "critical_ships": [               # Lista de navios críticos
+    {
+      "id": int,
+      "name": str,
+      "risk": int,
+      "level": str                  # "baixo", "moderado", "crítico"
+    }
+  ],
+  "total_extra_fuel_tons": float,
+  "total_savings_money": float,
+  "total_ships": int,
+  "risk_level": str                 # "baixo", "moderado", "crítico"
+}
+
+================================================================================
+8. INTEGRAÇÃO COM FRONTEND
+================================================================================
+
+No frontend, você pode usar assim:
+
+TYPESCRIPT:
+-----------
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
+
+async function getDashboardMetrics(days = 30) {
+  const response = await fetch(`${API_URL}/dashboard?days=${days}`);
+  const data = await response.json();
+  return data;
+}
+
+// Uso
+const metrics = await getDashboardMetrics(30);
+console.log(`Risco médio: ${metrics.fleet_average_risk}%`);
+console.log(`Economia potencial: R$ ${metrics.total_savings_money}`);
+
+================================================================================
+9. TESTANDO A API
+================================================================================
+
+9.1. Via Browser
+----------------
+Acesse: http://localhost:8000/docs
+Encontre: GET /api/v1/dashboard
+Clique: "Try it out"
+Execute: Clique em "Execute"
+
+9.2. Via cURL
+-------------
+curl "http://localhost:8000/api/v1/dashboard?days=30&fuel_price=3500"
+
+9.3. Via Python
+---------------
+import requests
+response = requests.get("http://localhost:8000/api/v1/dashboard")
+print(response.json())
+
+================================================================================
+                          FIM DA DOCUMENTAÇÃO
+================================================================================
+
