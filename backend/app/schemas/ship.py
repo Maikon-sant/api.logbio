@@ -4,6 +4,7 @@ from typing import List, Optional
 class ShipBase(BaseModel):
     name: str
     imo: str
+    ship_class: Optional[str] = None
 
 class ShipCreate(ShipBase):
     pass
