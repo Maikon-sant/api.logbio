@@ -1,2 +1,1 @@
-# Modelos de banco de dados (SQLAlchemy)
-
+# empty
