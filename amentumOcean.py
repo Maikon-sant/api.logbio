@@ -3,7 +3,12 @@ import json
 import math
 from datetime import datetime, timezone
 
-API_KEY = "jBkjI0GggX4GmLGfM5TgcDxmLTz4eGXd"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+API_KEY = os.getenv("AMENTUM_API_KEY")
 
 LAT = -25.55
 LON = -48.30

@@ -4,3 +4,4 @@ pydantic
 pydantic-settings
 python-multipart
 sqlalchemy
+python-dotenv
