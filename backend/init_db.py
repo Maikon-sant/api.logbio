@@ -1,6 +1,6 @@
 from app.database import engine, Base
-from app.models.ship import Ship
-from app.models.logbook import Logbook
+# Import models to register them with Base.metadata for table creation
+from app.models import Ship, Logbook  # noqa: F401
 
 def init_db():
     print("Criando tabelas no banco de dados...")
