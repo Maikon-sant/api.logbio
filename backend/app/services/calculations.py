@@ -46,14 +46,18 @@ def calculate_cleaning_roi(
     fuel_price_per_ton: float,
     days: float
 ) -> Dict[str, float]:
-    # Cálculo do consumo extra por dia
-    extra_per_day = avg_fuel_consumption - optimized_consumption
-    
-    # Total de toneladas extras no período
-    extra_tons = extra_per_day * days
-    
-    # Economia monetária
-    savings_money = extra_tons * fuel_price_per_ton
+    # Validação para evitar valores negativos
+    if avg_fuel_consumption < optimized_consumption:
+        # Não há economia, retorna zero
+        extra_tons = 0.0
+        savings_money = 0.0
+    else:
+        # Cálculo do consumo extra por dia
+        extra_per_day = avg_fuel_consumption - optimized_consumption
+        # Total de toneladas extras no período
+        extra_tons = extra_per_day * days
+        # Economia monetária
+        savings_money = extra_tons * fuel_price_per_ton
     
     return {
         "extra_fuel_tons": round(extra_tons, 2),
