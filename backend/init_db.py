@@ -1,7 +1,7 @@
 from app.database import engine, Base
 # Models must be imported to register them with Base before create_all()
-from app.models.ship import Ship  # noqa: F401
-from app.models.logbook import Logbook  # noqa: F401
+
+from app.models import Ship, Logbook  # noqa: F401
 
 def init_db():
     print("Criando tabelas no banco de dados...")
