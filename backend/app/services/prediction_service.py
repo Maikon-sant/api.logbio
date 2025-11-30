@@ -3,7 +3,8 @@ Serviço para lógica de negócio relacionada a previsões e insights.
 """
 from datetime import datetime, timedelta
 from typing import List
-from app.schemas.schemas import PredictionParams, PredictionResult, TimeSeriesPoint
+from app.schemas.prediction import PredictionParams, PredictionResult
+from app.schemas.common import TimeSeriesPoint
 
 
 def generate_prediction(params: PredictionParams) -> PredictionResult:

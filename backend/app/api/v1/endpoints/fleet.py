@@ -2,14 +2,20 @@
 Endpoints relacionados à frota.
 """
 from fastapi import APIRouter, HTTPException
-from app.schemas.schemas import FleetOverview
+from app.schemas.fleet import FleetOverview
 from app.services.fleet_service import get_fleet_overview
 
 router = APIRouter()
 
 
-@router.get("/overview", response_model=FleetOverview)
-async def get_fleet_overview():
+@router.get(
+    "/overview",
+    response_model=FleetOverview,
+    summary="Obter visão geral da frota",
+    description="Retorna dados agregados da frota, incluindo total de navios, eficiência média, KPIs principais e histórico de performance.",
+    response_description="Objeto contendo estatísticas e dados históricos da frota."
+)
+async def read_fleet_overview():
     """
     Retorna a visão geral da frota com KPIs e histórico de performance.
     """

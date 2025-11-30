@@ -6,10 +6,26 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.v1.api import api_router
 
+tags_metadata = [
+    {
+        "name": "fleet",
+        "description": "Operações relacionadas à gestão e visualização da frota de navios.",
+    },
+    {
+        "name": "predictions",
+        "description": "Geração de insights e previsões de bioincrustação e consumo.",
+    },
+    {
+        "name": "logbooks",
+        "description": "Gerenciamento de diários de bordo e registros manuais.",
+    },
+]
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="API para a plataforma LogBio486 - Gestão de Frota e Previsões de Bioincrustação",
+    openapi_tags=tags_metadata,
 )
 
 # Configuração de CORS
@@ -39,5 +55,5 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Endpoint de health check."""
-    return {"status": "healthy"}
+    return {"status": "ok"}
 
