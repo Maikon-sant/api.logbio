@@ -72,7 +72,8 @@ def aggregate_fleet_metrics(
             "critical_ships": [],
             "total_extra_fuel_tons": 0.0,
             "total_savings_money": 0.0,
-            "total_ships": 0
+            "total_ships": 0,
+            "risk_level": "baixo"
         }
     
     # Listas para armazenar cálculos
