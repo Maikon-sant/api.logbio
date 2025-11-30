@@ -8,7 +8,6 @@ class Ship(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     imo = Column(String, unique=True, index=True)
-    ship_class = Column(String)
     
     # Relacionamento com Logbook
     logbooks = relationship("Logbook", back_populates="ship")

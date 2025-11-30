@@ -23,26 +23,8 @@ def create_logbook(
     """
     db_logbook = models.Logbook(
         ship_id=logbook.ship_id,
-        session_id=logbook.session_id,
-        event_name=logbook.event_name,
-        start_date=logbook.start_date,
-        end_date=logbook.end_date,
-        duration=logbook.duration,
-        distance=logbook.distance,
-        aft_draft=logbook.aft_draft,
-        fwd_draft=logbook.fwd_draft,
-        mid_draft=logbook.mid_draft,
-        trim=logbook.trim,
-        displacement=logbook.displacement,
-        beaufort_scale=logbook.beaufort_scale,
-        sea_condition=logbook.sea_condition,
-        beaufort_scale_desc=logbook.beaufort_scale_desc,
-        sea_condition_desc=logbook.sea_condition_desc,
-        speed=logbook.speed,
-        speed_gps=logbook.speed_gps,
-        port=logbook.port,
-        latitude=logbook.latitude,
-        longitude=logbook.longitude
+        description=logbook.description,
+        date=logbook.date
     )
     db.add(db_logbook)
     db.commit()
