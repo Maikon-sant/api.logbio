@@ -1,5 +1,6 @@
 from app.database import engine, Base
-# Import models to register them with Base.metadata for table creation
+# Models must be imported to register them with Base before create_all()
+
 from app.models import Ship, Logbook  # noqa: F401
 
 def init_db():
