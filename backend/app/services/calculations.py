@@ -6,7 +6,25 @@ def calculate_fouling_risk(
     water_temp: float,
     salinity: float
 ) -> Dict[str, Any]:
+    """
+    Calculate the biofouling risk for a ship based on environmental factors.
 
+    This function uses a heuristic model to estimate the risk of biofouling
+    (marine organism accumulation on hull) based on idle time and water conditions.
+
+    Args:
+        idle_days: Number of days the ship has been stationary. Higher idle time
+            increases risk as organisms have more time to attach (5 risk points per day).
+        water_temp: Water temperature in Celsius. Warmer waters (>20°C) accelerate
+            biological growth, with temperatures above 25°C adding 15 risk points.
+        salinity: Water salinity in parts per thousand (ppt). Higher salinity (>35 ppt)
+            favors certain fouling species, adding 5 risk points.
+
+    Returns:
+        Dict containing:
+            - risk (int): Numeric risk score from 0 to 100
+            - level (str): Risk category - "baixo" (<30), "moderado" (30-69), or "crítico" (>=70)
+    """
     # Risk base
     risk = 20
     
@@ -46,6 +64,27 @@ def calculate_cleaning_roi(
     fuel_price_per_ton: float,
     days: float
 ) -> Dict[str, float]:
+    """
+    Calculate the Return on Investment (ROI) for hull cleaning operations.
+
+    This function estimates fuel savings achieved by maintaining a clean hull,
+    comparing actual consumption against optimized (clean hull) consumption rates.
+
+    Args:
+        avg_fuel_consumption: Current average fuel consumption in tons per day
+            (typically higher due to fouling drag).
+        optimized_consumption: Expected fuel consumption in tons per day with
+            a clean hull (baseline/optimal value).
+        fuel_price_per_ton: Current fuel price in currency units per ton.
+        days: Number of days to calculate savings over.
+
+    Returns:
+        Dict containing:
+            - extra_fuel_tons (float): Total excess fuel consumed due to fouling,
+              rounded to 2 decimal places.
+            - savings_money (float): Potential monetary savings from cleaning,
+              rounded to 2 decimal places.
+    """
     # Cálculo do consumo extra por dia
     extra_per_day = avg_fuel_consumption - optimized_consumption
     
@@ -65,7 +104,33 @@ def aggregate_fleet_metrics(
     logbooks: List[Dict[str, Any]],
     fuel_price: float
 ) -> Dict[str, Any]:
+    """
+    Aggregate biofouling risk and ROI metrics across an entire fleet.
 
+    This function processes multiple ship logbooks to calculate fleet-wide
+    statistics, identify critical vessels, and estimate total potential savings.
+
+    Args:
+        logbooks: List of logbook dictionaries, each containing:
+            - idle_days (float): Days the ship was stationary
+            - water_temp (float): Water temperature in Celsius
+            - salinity (float): Water salinity in ppt
+            - ship_id: Unique identifier for the ship
+            - ship_name (str, optional): Human-readable ship name
+            - avg_fuel_consumption (float, optional): Current fuel consumption
+            - optimized_consumption (float, optional): Optimal fuel consumption
+        fuel_price: Fuel price in currency units per ton for ROI calculations.
+
+    Returns:
+        Dict containing:
+            - fleet_average_risk (int): Mean risk score across all ships (0-100)
+            - critical_ships (list): Ships with risk >= 70, sorted by risk descending,
+              each containing id, name, risk, and level
+            - total_extra_fuel_tons (float): Sum of excess fuel across fleet
+            - total_savings_money (float): Total potential savings from cleaning
+            - total_ships (int): Number of ships processed
+            - risk_level (str): Fleet risk category - "baixo", "moderado", or "crítico"
+    """
     if not logbooks:
         return {
             "fleet_average_risk": 0,
